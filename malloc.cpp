@@ -30,13 +30,60 @@ void init(){
         currentNode->left = currentNode->right = nullptr;
         currentNode->level = 0;
         currentNode->status = unused;
+        currentNode->size = PAGE;
+        currentNode->childSize = currentNode->size / 2;
         currentNode = currentNode->next;
     }
-
-    test();
 }
 
-void test() {
-    std::cout << "Test" << std::endl;
-    // poolArrayLevel1[0]->left = nullptr;
+void* mallocx(size_t size) {
+    if (freeList == nullptr) {
+        init();
+    }
+
+    if (size < 32) {
+        size = 32;
+    }
+
+    if (PAGE >= size) {
+        size--;
+        size |= size >> 1;
+        size |= size >> 2;
+        size |= size >> 4;
+        size |= size >> 8;
+        size |= size >> 16;
+        size++;
+    }
+
+    head* currentNode = freeList;
+
+    while (currentNode->size != size) {
+        if ((currentNode->status == allocated) || (size > currentNode->size)){
+            if (currentNode->next != nullptr) {
+                currentNode = currentNode->next;
+            }
+            continue;
+        }
+
+        currentNode->left = currentNode;
+        currentNode->right = (head*)((uintptr_t)currentNode + currentNode->childSize);
+        currentNode->size = currentNode->size / 2;
+        currentNode->level += 1;
+        currentNode->status = unused;
+        currentNode->childSize = currentNode->size / 2;
+
+        if ((currentNode->left != nullptr) && (currentNode->left->status == unused)) {
+            currentNode = currentNode->left;
+        }
+        else if ((currentNode->right != nullptr) && (currentNode->right->status == unused)) {
+            currentNode = currentNode->right;
+        }
+        else {
+            return nullptr;
+        }
+    }
+
+    currentNode->status = allocated;
+    return currentNode;
 }
+
