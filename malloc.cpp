@@ -7,14 +7,13 @@
 head* freeList = nullptr;
 
 void init(){
-   // put poolArrayLevel1 on the mmap'd memory
-   // write a function to divide the chunks in case of a memory allocation
-
     void* memory = mmap(nullptr, 12*1024*1024, PROT_READ|PROT_WRITE,
                         MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+
     if (memory == MAP_FAILED) {
         return;
     }
+
     freeList = (head*)memory;
     head* currentNode = freeList;
 
@@ -28,7 +27,6 @@ void init(){
 
         currentNode->next = (head*)((uintptr_t)currentNode + PAGE);
         currentNode->left = currentNode->right = nullptr;
-        currentNode->level = 0;
         currentNode->status = unused;
         currentNode->size = PAGE;
         currentNode->childSize = currentNode->size / 2;
@@ -57,7 +55,27 @@ void* mallocx(size_t size) {
 
     head* currentNode = freeList;
 
-    while (currentNode->size != size) {
+    while (true) {
+        if ((currentNode->left != nullptr) && (currentNode->left->status == allocated)) {
+            if ((currentNode->right != nullptr)){
+                if ((currentNode->right->status == unused)) {
+                    currentNode = currentNode->right;
+                }
+                else {
+                    currentNode = currentNode->next;
+                }
+            }
+        }
+        else if (currentNode->status == allocated) {
+            if (currentNode->next != nullptr) {
+                currentNode = currentNode->next;
+            }
+        }
+
+        if (currentNode->size == size) {
+            break;
+        }
+
         if ((currentNode->status == allocated) || (size > currentNode->size)){
             if (currentNode->next != nullptr) {
                 currentNode = currentNode->next;
@@ -67,20 +85,10 @@ void* mallocx(size_t size) {
 
         currentNode->left = currentNode;
         currentNode->right = (head*)((uintptr_t)currentNode + currentNode->childSize);
-        currentNode->size = currentNode->size / 2;
-        currentNode->level += 1;
         currentNode->status = unused;
-        currentNode->childSize = currentNode->size / 2;
-
-        if ((currentNode->left != nullptr) && (currentNode->left->status == unused)) {
-            currentNode = currentNode->left;
-        }
-        else if ((currentNode->right != nullptr) && (currentNode->right->status == unused)) {
-            currentNode = currentNode->right;
-        }
-        else {
-            return nullptr;
-        }
+        currentNode->size = currentNode->size / 2;
+        currentNode->right->size = currentNode->size;
+        currentNode = currentNode->left;
     }
 
     currentNode->status = allocated;

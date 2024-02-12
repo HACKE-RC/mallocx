@@ -22,21 +22,15 @@ enum flag{
 
 struct head{
     head* left = nullptr;
-    // size_t ftSize = 0;
     head* right = nullptr;
     size_t childSize = 0;
     head* next = nullptr;
     head* previous = nullptr;
-    enum flag status = unused;
+    flag status = unused;
     size_t size = 0;
-    short int level{};
 };
 
 void init();
 void* mallocx(size_t size);
-void test();
-
-extern std::array<head*, LEVELS> poolArrays;
-extern std::array<head*, POOL_ARRAY_SIZE> poolArrayLevel1;      // 4KB blocks
 
 #endif
