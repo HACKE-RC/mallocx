@@ -20,6 +20,9 @@ std::array<head*, LEVELS> poolArrays;
     // poolArrayLevel6 = *reinterpret_cast<std::array<head*, POOL_ARRAY_SIZE * 32>*>(memoryPool);
     // poolArrayLevel7 = *reinterpret_cast<std::array<head*, POOL_ARRAY_SIZE * 64>*>(memoryPool);
 void init(){
+   // put poolArrayLevel1 on the mmap'd memory
+   // write a function to divide the chunks in case of a memory allocation
+    //
     void* memoryPool = malloc(100);
     poolArrayLevel1 = *new(memoryPool) std::array<head*, POOL_ARRAY_SIZE>();
     poolArrays[0] = reinterpret_cast<head*>(poolArrayLevel1.data());
@@ -44,9 +47,9 @@ void init(){
 
         // Current block
         current->next =
-               reinterpret_cast<head*>(reinterpret_cast<char*>(current) + 4096);
+               reinterpret_cast<head*>(reinterpret_cast<uintptr_t>(current) + 4096);
         if (i != 0){
-            current->previous = reinterpret_cast<head*>(reinterpret_cast<char*>(current) - 4096);
+            current->previous = reinterpret_cast<head*>(reinterpret_cast<uintptr_t>(current) - 4096);
         }
         // Advance to next block
         current = current->next;
