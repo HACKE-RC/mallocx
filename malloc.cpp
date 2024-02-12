@@ -1,6 +1,4 @@
 #include "malloc.hpp"
-#include <iostream>
-#include <array>
 #include <cstdint>
 #include <sys/mman.h>
 
