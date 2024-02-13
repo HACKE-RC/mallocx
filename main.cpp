@@ -2,7 +2,8 @@
 #include "malloc.hpp"
 int main() {
     init();
-    // mallocx(20);
+    auto smallBlock = mallocx(20);
+    freex(smallBlock);
     auto bigBlock1 = mallocx(0x3000);
     freex(bigBlock1);
     mallocx(2047);

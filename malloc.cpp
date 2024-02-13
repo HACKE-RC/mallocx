@@ -44,14 +44,7 @@ void* mallocx(size_t size) {
         size = MINIMUM_ALLOCATION_SIZE;
     }
 
-// round up to the nearest power of two
-    size--;
-    size |= size >> 1;
-    size |= size >> 2;
-    size |= size >> 4;
-    size |= size >> 8;
-    size |= size >> 16;
-    size++;
+    size = roundUpToNextPower2(size);
 
     head* currentNode = freeList;
 
@@ -165,4 +158,33 @@ void freex(void* block) {
             coalescedBlocks--;
         }
     }
+}
+
+void* reallocx(void *block, size_t size) {
+    // increase the size of the current block
+    // if the next block to which we want to expand is already allocated
+    // copy all the data of this block and allocate a block of size and return it
+    size = roundUpToNextPower2(size);
+
+    head* node = (head*)((uintptr_t)block - sizeof(head));
+    head* buddyNode = (head*)((uintptr_t)node ^ node->size);
+
+    if (size > node->size * 2 || buddyNode->status == allocated) {
+        // reallocation code
+    }
+
+    buddyNode->status = allocated;
+    node->size = node->size * 2;
+
+}
+
+size_t roundUpToNextPower2(size_t size) {
+    size--;
+    size |= size >> 1;
+    size |= size >> 2;
+    size |= size >> 4;
+    size |= size >> 8;
+    size |= size >> 16;
+    size++;
+    return size;
 }
