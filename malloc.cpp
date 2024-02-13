@@ -132,22 +132,23 @@ void* coalesceBlocks(head* node, size_t n) {
 
 
 void freex(void* block) {
-    head* node = (head*)(block - sizeof(head));
+    head* node = (head*)((uintptr_t)block - sizeof(head));
     node->status = unused;
-    int usuableSize = ((uintptr_t)node->next - (uintptr_t)node - sizeof(head));
-    memset(block, 0, usuableSize);
+    int usuableSize = ((uintptr_t)node->next - (uintptr_t)node - (sizeof(head) * 2));
 
     if (node->isBuddyCoalesced) {
-        node->size = node->size / 2;
-        node->status = unused;
+        head* buddy = (head*)((uintptr_t)node ^ node->size);
+        node->size = buddy->size;
+        node->status = buddy->status = unused;
         node->isBuddyCoalesced = false;
+        buddy->next = node->next;
         return;
     }
+
 
     if (node->size > PAGE_SIZE) {
         size_t coalescedBlocks = node->size / PAGE_SIZE;
         head* tempNode = node;
-
         coalescedBlocks--;
         while (coalescedBlocks) {
             head* nextPointer = (head*)((uintptr_t)tempNode + PAGE_SIZE);
@@ -165,6 +166,9 @@ void freex(void* block) {
             coalescedBlocks--;
         }
     }
+    else {
+        memset(block, 0, usuableSize);
+    }
 }
 
 void* reallocx(void *block, size_t size) {
@@ -176,17 +180,21 @@ void* reallocx(void *block, size_t size) {
     head* node = (head*)((uintptr_t)block - sizeof(head));
     head* buddyNode = (head*)((uintptr_t)node ^ node->size);
 
+    if (size == node->size) {
+        return block;
+    }
+
     if (size > node->size * 2 || buddyNode->status == allocated) {
         // reallocation code
     }
 
     buddyNode->status = allocated;
-    node->size = node->size * 2;
     node->isBuddyCoalesced = true;
-// TODO: find a way to free reallocated / resized memory
+    node->size = node->size * 2;
+    return (void*)((uintptr_t)node - sizeof(head));
 }
 
-size_t roundUpToNextPower2(size_t size) {
+constexpr size_t roundUpToNextPower2(size_t size) {
     size--;
     size |= size >> 1;
     size |= size >> 2;
