@@ -27,6 +27,7 @@ struct head{
     size_t childSize = 0;
     size_t size = 0;
     short level = 0;
+    bool isBuddyCoalesced = false;
 };
 
 void init();

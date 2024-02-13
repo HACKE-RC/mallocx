@@ -137,6 +137,13 @@ void freex(void* block) {
     int usuableSize = ((uintptr_t)node->next - (uintptr_t)node - sizeof(head));
     memset(block, 0, usuableSize);
 
+    if (node->isBuddyCoalesced) {
+        node->size = node->size / 2;
+        node->status = unused;
+        node->isBuddyCoalesced = false;
+        return;
+    }
+
     if (node->size > PAGE_SIZE) {
         size_t coalescedBlocks = node->size / PAGE_SIZE;
         head* tempNode = node;
@@ -175,7 +182,8 @@ void* reallocx(void *block, size_t size) {
 
     buddyNode->status = allocated;
     node->size = node->size * 2;
-
+    node->isBuddyCoalesced = true;
+// TODO: find a way to free reallocated / resized memory
 }
 
 size_t roundUpToNextPower2(size_t size) {
