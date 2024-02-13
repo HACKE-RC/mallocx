@@ -15,7 +15,7 @@ void init(){
     freeList = (head*)memory;
     head* currentNode = freeList;
 
-    for (int i = 0; i < (sizes[i] - 1); i++) {
+    for (int i = 0; i < (POOL_ARRAY_SIZE - 1); i++) {
         if (i != 0) {
             currentNode->previous = (head*)((uintptr_t)currentNode - PAGE_SIZE);
         }
@@ -118,7 +118,7 @@ void* mallocx(size_t size) {
     }
 
     currentNode->status = allocated;
-    return (currentNode + sizeof(head));
+    return (void*)((uintptr_t)currentNode + sizeof(head));
 }
 
 void* coalesceBlocks(head* node, size_t n) {
@@ -133,5 +133,10 @@ void* coalesceBlocks(head* node, size_t n) {
     node->size = PAGE_SIZE * n;
     node->status = allocated;
 
-    return (node + sizeof(head));
+    return (void*)((uintptr_t)node + sizeof(head));
+}
+
+
+void freex(void* block) {
+    head* node = (head*)(block - sizeof(head));
 }

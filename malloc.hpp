@@ -1,7 +1,8 @@
 #ifndef MALLOCX_MALLOC_HPP
 #define MALLOCX_MALLOC_HPP
-#include <array>
+// #include <array>
 #include <cstdlib>
+#include <cstdint>
 
 #define MIN 5
 #define LEVELS 7
@@ -11,12 +12,6 @@
 #define MINIMUM_ALLOCATION_SIZE 32
 #define MAXIMUM_COALESCE_BLOCKS 4
 
-
-inline int sizes[LEVELS] = {
-    POOL_ARRAY_SIZE, POOL_ARRAY_SIZE * 2, POOL_ARRAY_SIZE * 4,
-    POOL_ARRAY_SIZE * 8, POOL_ARRAY_SIZE * 16, POOL_ARRAY_SIZE * 32,
-    POOL_ARRAY_SIZE * 64
-};
 
 enum flag{
     unused,
@@ -35,6 +30,7 @@ struct head{
 };
 
 void init();
+void freex(void* block);
 void* mallocx(size_t size);
 void* coalesceBlocks(head* node, size_t n);
 #endif
