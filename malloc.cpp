@@ -94,7 +94,6 @@ void* mallocx(size_t size) {
             break;
         }
 
-
         if ((currentNode->status == allocated) || (size > currentNode->size)){
             if (currentNode->next != nullptr) {
                 currentNode = currentNode->next;
@@ -145,7 +144,6 @@ void freex(void* block) {
         return;
     }
 
-
     if (node->size > PAGE_SIZE) {
         size_t coalescedBlocks = node->size / PAGE_SIZE;
         head* tempNode = node;
@@ -160,7 +158,6 @@ void freex(void* block) {
             nextPointer->childSize = nextPointer->size / 2;
             nextPointer->next = (head*)((uintptr_t)nextPointer + PAGE_SIZE);
             tempNode->next = nextPointer;
-
             tempNode->size = PAGE_SIZE;
             tempNode = nextPointer;
             coalescedBlocks--;
@@ -175,17 +172,26 @@ void* reallocx(void *block, size_t size) {
     // increase the size of the current block
     // if the next block to which we want to expand is already allocated
     // copy all the data of this block and allocate a block of size and return it
-    size = roundUpToNextPower2(size);
+    size_t roundedSize = roundUpToNextPower2(size);
 
     head* node = (head*)((uintptr_t)block - sizeof(head));
     head* buddyNode = (head*)((uintptr_t)node ^ node->size);
 
-    if (size == node->size) {
+    if (roundedSize == node->size) {
         return block;
     }
 
-    if (size > node->size * 2 || buddyNode->status == allocated) {
-        // reallocation code
+    if (roundedSize >= node->size * 2 || buddyNode->status == allocated) {
+        void* newNode = (head*)(mallocx(size));
+        if (newNode != nullptr) {
+            memcpy(newNode, block, node->size - sizeof(head));
+            head* newNodeData = (head*)((uintptr_t)newNode - sizeof(head));
+            newNodeData->level = node->level;
+            newNodeData->status = node->status;
+            newNodeData->size = roundedSize;
+            freex(block);
+            return (void*)newNode;
+        }
     }
 
     buddyNode->status = allocated;
