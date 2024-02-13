@@ -1,4 +1,4 @@
-#include "malloc.hpp"
+#include "../src/malloc.hpp"
 int main() {
     init();
     auto smallBlock = mallocx(20);
