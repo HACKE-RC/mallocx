@@ -3,7 +3,7 @@
 int main() {
     init();
     // mallocx(20);
-    auto bigBlock1 = mallocx(4092);
+    auto bigBlock1 = mallocx(0x3000);
     freex(bigBlock1);
     mallocx(2047);
     mallocx(2046);

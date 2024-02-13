@@ -1,5 +1,6 @@
 #include "malloc.hpp"
 #include <cstdint>
+#include <cstring>
 #include <sys/mman.h>
 
 head* freeList = nullptr;
@@ -139,4 +140,29 @@ void* coalesceBlocks(head* node, size_t n) {
 
 void freex(void* block) {
     head* node = (head*)(block - sizeof(head));
+    node->status = unused;
+    int usuableSize = ((uintptr_t)node->next - (uintptr_t)node - sizeof(head));
+    memset(block, 0, usuableSize);
+
+    if (node->size > PAGE_SIZE) {
+        size_t coalescedBlocks = node->size / PAGE_SIZE;
+        head* tempNode = node;
+
+        coalescedBlocks--;
+        while (coalescedBlocks) {
+            head* nextPointer = (head*)((uintptr_t)tempNode + PAGE_SIZE);
+
+            nextPointer->previous = tempNode;
+            nextPointer->size = PAGE_SIZE;
+            nextPointer->level = 0;
+            nextPointer->status = unused;
+            nextPointer->childSize = nextPointer->size / 2;
+            nextPointer->next = (head*)((uintptr_t)nextPointer + PAGE_SIZE);
+            tempNode->next = nextPointer;
+
+            tempNode->size = PAGE_SIZE;
+            tempNode = nextPointer;
+            coalescedBlocks--;
+        }
+    }
 }
