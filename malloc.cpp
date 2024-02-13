@@ -17,16 +17,16 @@ void init(){
 
     for (int i = 0; i < (sizes[i] - 1); i++) {
         if (i != 0) {
-            currentNode->previous = (head*)((uintptr_t)currentNode - PAGE);
+            currentNode->previous = (head*)((uintptr_t)currentNode - PAGE_SIZE);
         }
         else {
             currentNode->previous = nullptr;
         }
 
-        currentNode->next = (head*)((uintptr_t)currentNode + PAGE);
+        currentNode->next = (head*)((uintptr_t)currentNode + PAGE_SIZE);
         currentNode->left = currentNode->right = nullptr;
         currentNode->status = unused;
-        currentNode->size = PAGE;
+        currentNode->size = PAGE_SIZE;
         currentNode->childSize = currentNode->size / 2;
         currentNode = currentNode->next;
     }
@@ -39,23 +39,39 @@ void* mallocx(size_t size) {
 
     size = size +  sizeof(head);
 
-    if (size < 32) {
-        size = 32;
+    if (size < MINIMUM_ALLOCATION_SIZE) {
+        size = MINIMUM_ALLOCATION_SIZE;
     }
 
-    if (PAGE >= size) {
-        size--;
-        size |= size >> 1;
-        size |= size >> 2;
-        size |= size >> 4;
-        size |= size >> 8;
-        size |= size >> 16;
-        size++;
-    }
+// round up to the nearest power of two
+    size--;
+    size |= size >> 1;
+    size |= size >> 2;
+    size |= size >> 4;
+    size |= size >> 8;
+    size |= size >> 16;
+    size++;
 
     head* currentNode = freeList;
 
     while (true) {
+        if (size > PAGE_SIZE) {
+            if ((currentNode->level == 0) && (currentNode->status != allocated) && (currentNode->next != nullptr)) {
+                size_t blocksToCoalesce = size / PAGE_SIZE;
+                head* tempNode{};
+                bool canCoalesce = true;
+
+                tempNode = currentNode->next;
+                for (size_t i = 0; i < blocksToCoalesce - 1; i++) {
+                    if (tempNode->status == allocated) {
+                        canCoalesce = false;
+                        break;
+                    }
+                    tempNode = tempNode->next;
+                }
+            }
+        }
+
         if ((currentNode->left != nullptr) && (currentNode->left->status == allocated)) {
             if ((currentNode->right != nullptr)){
                 if ((currentNode->right->status == unused)) {
@@ -76,6 +92,7 @@ void* mallocx(size_t size) {
             break;
         }
 
+
         if ((currentNode->status == allocated) || (size > currentNode->size)){
             if (currentNode->next != nullptr) {
                 currentNode = currentNode->next;
@@ -88,6 +105,7 @@ void* mallocx(size_t size) {
         currentNode->status = unused;
         currentNode->size = currentNode->size / 2;
         currentNode->right->size = currentNode->size;
+        currentNode->right->next = currentNode->next;
         currentNode = currentNode->left;
     }
 

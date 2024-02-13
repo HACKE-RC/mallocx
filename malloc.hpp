@@ -5,9 +5,10 @@
 
 #define MIN 5
 #define LEVELS 7
-#define PAGE 4096
+#define PAGE_SIZE 4096
 #define POOL_SIZE 0xC00000
 #define POOL_ARRAY_SIZE 3072
+#define MINIMUM_ALLOCATION_SIZE 32
 
 inline int sizes[LEVELS] = {
     POOL_ARRAY_SIZE, POOL_ARRAY_SIZE * 2, POOL_ARRAY_SIZE * 4,
@@ -21,13 +22,14 @@ enum flag{
 };
 
 struct head{
-    head* left = nullptr;
-    head* right = nullptr;
-    size_t childSize = 0;
-    head* next = nullptr;
     head* previous = nullptr;
+    head* right = nullptr;
+    head* left = nullptr;
+    head* next = nullptr;
     flag status = unused;
+    size_t childSize = 0;
     size_t size = 0;
+    short level = 0;
 };
 
 void init();
