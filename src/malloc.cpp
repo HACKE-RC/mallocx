@@ -9,9 +9,6 @@ void init(){
     void* memory = mmap(nullptr, 12*1024*1024, PROT_READ|PROT_WRITE,
                         MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
 
-    if (memory == MAP_FAILED) {
-        return;
-    }
 
     freeList = (head*)memory;
     head* currentNode = freeList;
