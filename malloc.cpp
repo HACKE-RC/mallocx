@@ -37,6 +37,8 @@ void* mallocx(size_t size) {
         init();
     }
 
+    size = size +  sizeof(head);
+
     if (size < 32) {
         size = 32;
     }
@@ -90,6 +92,6 @@ void* mallocx(size_t size) {
     }
 
     currentNode->status = allocated;
-    return currentNode;
+    return (currentNode + sizeof(head));
 }
 
