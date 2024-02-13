@@ -61,6 +61,10 @@ void* mallocx(size_t size) {
                 head* tempNode{};
                 bool canCoalesce = true;
 
+                if (blocksToCoalesce > MAXIMUM_COALESCE_BLOCKS) {
+                    return nullptr;
+                }
+
                 tempNode = currentNode->next;
                 for (size_t i = 0; i < blocksToCoalesce - 1; i++) {
                     if (tempNode->status == allocated) {
@@ -68,6 +72,10 @@ void* mallocx(size_t size) {
                         break;
                     }
                     tempNode = tempNode->next;
+                }
+
+                if (canCoalesce) {
+                    return coalesceBlocks(currentNode, blocksToCoalesce);
                 }
             }
         }
@@ -113,3 +121,17 @@ void* mallocx(size_t size) {
     return (currentNode + sizeof(head));
 }
 
+void* coalesceBlocks(head* node, size_t n) {
+    head* lastNode{};
+
+    lastNode = node;
+    for (int i = 0; i < n - 1; i ++) {
+        lastNode = lastNode->next;
+    }
+
+    node->next = lastNode->next;
+    node->size = PAGE_SIZE * n;
+    node->status = allocated;
+
+    return (node + sizeof(head));
+}
