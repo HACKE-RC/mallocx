@@ -31,10 +31,10 @@ struct head{
     bool isBuddyCoalesced = false;
 };
 
-void init();
-void freex(void* block);
-void* mallocx(size_t size);
-void* reallocx(void* block, size_t size);
-void* coalesceBlocks(head* node, size_t n);
+extern void init();
+extern void freex(void* block);
+extern void* mallocx(size_t size);
+extern void* reallocx(void* block, size_t size);
+extern void* coalesceBlocks(head* node, size_t n);
 constexpr size_t roundUpToNextPower2(size_t size);
 #endif
