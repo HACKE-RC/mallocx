@@ -1,14 +1,13 @@
 #include "malloc.hpp"
 #include <cstdint>
-#include <cstring>
+#include "lib/string.hpp"
 #include <sys/mman.h>
 
 head* freeList = nullptr;
 
 void init(){
-    void* memory = mmap(nullptr, 12*1024*1024, PROT_READ|PROT_WRITE,
+    void* memory = mmap(nullptr, (12*1024*1024) + (sizeof(head) * 3072), PROT_READ|PROT_WRITE,
                         MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
-
 
     freeList = (head*)memory;
     head* currentNode = freeList;
@@ -161,7 +160,7 @@ void freex(void* block) {
         }
     }
     else {
-        memset(block, 0, usuableSize);
+        memoryset(block, 0, usuableSize);
     }
 }
 
@@ -181,7 +180,7 @@ void* reallocx(void *block, size_t size) {
     if (roundedSize >= node->size * 2 || buddyNode->status == allocated) {
         void* newNode = (head*)(mallocx(size));
         if (newNode != nullptr) {
-            memcpy(newNode, block, node->size - sizeof(head));
+            memorycpy(newNode, block, node->size - sizeof(head));
             head* newNodeData = (head*)((uintptr_t)newNode - sizeof(head));
             newNodeData->level = node->level;
             newNodeData->status = node->status;
